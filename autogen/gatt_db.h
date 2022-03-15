@@ -30,14 +30,8 @@ extern const sli_bt_gattdb_t gattdb;
 #define gattdb_weight_measurement_10          39
 #define gattdb_team1_count                    42
 #define gattdb_team2_count                    45
-#define gattdb_health_thermometer             47
-#define gattdb_temperature_measurement        49
-#define gattdb_temperature_type               52
-#define gattdb_intermediate_temperature       54
-#define gattdb_measurement_interval           57
-#define gattdb_valid_range                    59
-#define gattdb_ota                            60
-#define gattdb_ota_control                    62
+#define gattdb_ota                            47
+#define gattdb_ota_control                    49
 
 
 #endif // __GATT_DB_H

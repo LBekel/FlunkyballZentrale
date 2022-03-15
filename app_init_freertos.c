@@ -31,7 +31,6 @@
 #include "FreeRTOSConfig.h"
 #include "task.h"
 #include "sl_status.h"
-#include "sl_sensor_rht.h"
 #include "app_log.h"
 #include "app.h"
 
@@ -53,8 +52,6 @@ void app_init_task(void *p_arg)
 {
   (void)p_arg;
   app_log_info("\n\n\rFlunkyball Zentrale\n\r");
-  // Init temperature sensor.
-  sl_sensor_rht_init();
   vTaskDelete(NULL);
 }
 

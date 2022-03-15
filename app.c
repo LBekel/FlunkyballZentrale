@@ -1,31 +1,6 @@
 /***************************************************************************//**
  * @file
  * @brief Core application logic.
- *******************************************************************************
- * # License
- * <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
- *******************************************************************************
- *
- * SPDX-License-Identifier: Zlib
- *
- * The licensor of this software is Silicon Laboratories Inc.
- *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- *
- * 1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 3. This notice may not be removed or altered from any source distribution.
- *
  ******************************************************************************/
 #include <stdbool.h>
 #include <math.h>
@@ -43,8 +18,6 @@
 #ifdef SL_CATALOG_CLI_PRESENT
 #include "sl_cli.h"
 #endif // SL_CATALOG_CLI_PRESENT
-#include "sl_sensor_rht.h"
-#include "sl_health_thermometer.h"
 #include "app.h"
 
 // connection parameters
@@ -83,10 +56,8 @@ typedef enum
 {
     scanning,
     opening,
-    discover_thermometer_service,
     discover_weight_service,
     discover_game_service,
-    discover_thermometer_characteristics,
     discover_weight_characteristics,
     discover_team_characteristics,
     enable_indication,
@@ -101,15 +72,11 @@ typedef struct
     int8_t tx_power;
     int8_t remote_tx_power;
     uint16_t server_address;
-    uint32_t thermometer_service_handle;
-    uint16_t thermometer_characteristic_handle;
     uint32_t weight_service_handle;
     uint16_t weight_characteristic_handle;
     uint32_t game_service_handle;
     uint16_t team_characteristic_handle;
     uint8_t team;
-    float temperature;
-    char unit;
     float weight;
     char weightunit;
 } conn_properties_t;
@@ -127,9 +94,6 @@ static conn_properties_t conn_properties[SL_BT_CONFIG_MAX_CONNECTIONS];
 // Counter of active connections
 static uint8_t active_connections_num;
 
-// Connection handle.
-static uint8_t app_connection = 0;
-
 // State of the connection under establishment
 static conn_state_t conn_state;
 
@@ -142,9 +106,6 @@ static volatile bool app_btn0_pressed = false;
 // Periodic timer handle.
 static sl_simple_timer_t app_periodic_timer;
 
-// Periodic timer callback.
-static void app_periodic_timer_cb(sl_simple_timer_t *timer, void *data);
-
 static void add_connection(uint8_t connection, uint16_t address);
 static void remove_connection(uint8_t connection);
 static float translate_IEEE_11073_temperature_to_float(IEEE_11073_float const *IEEE_11073_value);
@@ -155,10 +116,7 @@ void team_counter(uint8_t team, bool add);
 static uint8_t find_index_by_connection_handle(uint8_t connection);
 static uint8_t find_service_in_advertisement(uint8_t *data, uint8_t len);
 
-// Health Thermometer service UUID defined by Bluetooth SIG
-//1809
-static const uint8array thermo_service = {.len = 2 , .data = {0x09, 0x18}};
-
+// Service UUID defined by Bluetooth SIG
 //181D
 static const uint8array weight_service = {.len = 2 , .data = {0x1D, 0x18}};
 
@@ -167,8 +125,7 @@ static const uint8array game_service = {.len = 16 , .data = {0x8f,0xae,0xf7,0xe5
                                                 0x2f,0x09,0x60,0x89,
                                                 0xad,0x4b,0xf8,0x1f,
                                                 0xe7,0xfc,0xf2,0x10}};
-// Temperature Measurement characteristic UUID defined by Bluetooth SIG
-static const uint8array thermo_char = {.len = 2 , .data = {0x1c, 0x2a}};
+// Characteristic UUID defined by Bluetooth SIG
 static const uint8array weight_char = {.len = 2 , .data = {0x9D, 0x2a}};
 // 42dfdd8e-58bc-4560-9e23-000000000003
 static const uint8array team_char = {.len = 16 , .data = {0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -310,7 +267,7 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
                     sl_bt_connection_power_reporting_enable);
             app_assert_status(sc);
 
-            conn_state = discover_thermometer_service;
+            conn_state = discover_weight_service;
             break;
 
             // -------------------------------
@@ -320,11 +277,7 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
             if(table_index != TABLE_INDEX_INVALID)
             {
                 // Save service handle for future reference
-                if(compare_uuid(&(evt->data.evt_gatt_service.uuid), &thermo_service))
-                {
-                    conn_properties[table_index].thermometer_service_handle = evt->data.evt_gatt_service.service;
-                }
-                else if(compare_uuid(&(evt->data.evt_gatt_service.uuid), &weight_service))
+                if(compare_uuid(&(evt->data.evt_gatt_service.uuid), &weight_service))
                 {
                     conn_properties[table_index].weight_service_handle = evt->data.evt_gatt_service.service;
                 }
@@ -343,12 +296,7 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
             if(table_index != TABLE_INDEX_INVALID)
             {
                 // Save characteristic handle for future reference
-                if(compare_uuid(&(evt->data.evt_gatt_characteristic.uuid), &thermo_char))
-                {
-                    conn_properties[table_index].thermometer_characteristic_handle =
-                        evt->data.evt_gatt_characteristic.characteristic;
-                }
-                else if(compare_uuid(&(evt->data.evt_gatt_characteristic.uuid), &weight_char))
+                if(compare_uuid(&(evt->data.evt_gatt_characteristic.uuid), &weight_char))
                 {
                     conn_properties[table_index].weight_characteristic_handle =
                         evt->data.evt_gatt_characteristic.characteristic;
@@ -390,20 +338,6 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
 
             }
             // If service discovery finished
-            if(conn_state == discover_thermometer_service)
-            {
-                if(conn_properties[table_index].thermometer_service_handle != SERVICE_HANDLE_INVALID)
-                {
-                    // Discover thermometer characteristic on the responder device
-                    sc = sl_bt_gatt_discover_characteristics_by_uuid(evt->data.evt_gatt_procedure_completed.connection,
-                            conn_properties[table_index].thermometer_service_handle, thermo_char.len,
-                            (const uint8_t*) thermo_char.data);
-                    app_assert_status(sc);
-                    conn_state = discover_thermometer_characteristics;
-                    break;
-                }
-            }
-
             if(conn_state == discover_weight_service)
             {
                 if(conn_properties[table_index].weight_service_handle != SERVICE_HANDLE_INVALID)
@@ -414,6 +348,23 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
                             (const uint8_t*) weight_char.data);
                     app_assert_status(sc);
                     conn_state = discover_weight_characteristics;
+                    break;
+                }
+            }
+
+            // If characteristic discovery finished
+            if(conn_state == discover_weight_characteristics)
+            {
+                // If weight characteristic discovery finished
+                if(conn_properties[table_index].weight_characteristic_handle != CHARACTERISTIC_HANDLE_INVALID)
+                {
+                    // stop discovering
+                    sl_bt_scanner_stop();
+                    // enable indications
+                    sc = sl_bt_gatt_set_characteristic_notification(evt->data.evt_gatt_procedure_completed.connection,
+                            conn_properties[table_index].weight_characteristic_handle, sl_bt_gatt_indication);
+                    app_assert_status(sc);
+                    conn_state = discover_game_service;
                     break;
                 }
             }
@@ -433,36 +384,7 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
                 }
             }
 
-            // If characteristic discovery finished
-            if(conn_state == discover_thermometer_characteristics)
-            {
-                if(conn_properties[table_index].thermometer_characteristic_handle != CHARACTERISTIC_HANDLE_INVALID)
-                {
-                    // stop discovering
-                    sl_bt_scanner_stop();
-                    // enable indications
-                    sc = sl_bt_gatt_set_characteristic_notification(evt->data.evt_gatt_procedure_completed.connection,
-                            conn_properties[table_index].thermometer_characteristic_handle, sl_bt_gatt_indication);
-                    app_assert_status(sc);
-                    conn_state = discover_weight_service;
-                    break;
-                }
-            }
-            if(conn_state == discover_weight_characteristics)
-            {
-                // If weight characteristic discovery finished
-                if(conn_properties[table_index].weight_characteristic_handle != CHARACTERISTIC_HANDLE_INVALID)
-                {
-                    // stop discovering
-                    sl_bt_scanner_stop();
-                    // enable indications
-                    sc = sl_bt_gatt_set_characteristic_notification(evt->data.evt_gatt_procedure_completed.connection,
-                            conn_properties[table_index].weight_characteristic_handle, sl_bt_gatt_indication);
-                    app_assert_status(sc);
-                    conn_state = discover_game_service;
-                    break;
-                }
-            }
+
             if(conn_state == discover_team_characteristics)
             {
                 // If team characteristic discovery finished
@@ -503,28 +425,6 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
         case sl_bt_evt_gatt_characteristic_value_id:
             table_index = find_index_by_connection_handle(evt->data.evt_gatt_characteristic_value.connection);
             if(evt->data.evt_gatt_characteristic_value.characteristic ==
-                    conn_properties[table_index].thermometer_characteristic_handle)
-            {
-                if(evt->data.evt_gatt_characteristic_value.value.len >= 5)
-                {
-                    char_value = &(evt->data.evt_gatt_characteristic_value.value.data[0]);
-                    if(table_index != TABLE_INDEX_INVALID)
-                    {
-                        conn_properties[table_index].temperature = translate_IEEE_11073_temperature_to_float(
-                                (IEEE_11073_float*) (char_value + 1));
-                        conn_properties[table_index].unit = translate_flags_to_temperature_unit(char_value[0]);
-                    }
-                }
-                else
-                {
-                    app_log_warning("Characteristic value too short: %d\n\r",
-                            evt->data.evt_gatt_characteristic_value.value.len);
-                }
-                // Send confirmation for the indication
-                sc = sl_bt_gatt_send_characteristic_confirmation(evt->data.evt_gatt_characteristic_value.connection);
-                app_assert_status(sc);
-            }
-            else if(evt->data.evt_gatt_characteristic_value.characteristic ==
                     conn_properties[table_index].weight_characteristic_handle)
             {
                 if(evt->data.evt_gatt_characteristic_value.value.len >= 5)
@@ -652,7 +552,7 @@ static uint8_t find_service_in_advertisement(uint8_t *data, uint8_t len)
         if(ad_field_type == 0x02 || ad_field_type == 0x03)
         {
             // compare UUID to Health Thermometer service UUID
-            if(memcmp(&data[i + 2], thermo_service.data, 2) == 0)
+            if(memcmp(&data[i + 2], weight_service.data, 2) == 0)
             {
                 return 1;
             }
@@ -706,14 +606,11 @@ static void remove_connection(uint8_t connection)
     for(i = active_connections_num; i < SL_BT_CONFIG_MAX_CONNECTIONS; i++)
     {
         conn_properties[i].connection_handle = CONNECTION_HANDLE_INVALID;
-        conn_properties[i].thermometer_service_handle = SERVICE_HANDLE_INVALID;
-        conn_properties[i].thermometer_characteristic_handle = CHARACTERISTIC_HANDLE_INVALID;
         conn_properties[i].weight_service_handle= SERVICE_HANDLE_INVALID;
         conn_properties[i].weight_characteristic_handle = CHARACTERISTIC_HANDLE_INVALID;
         conn_properties[i].game_service_handle= SERVICE_HANDLE_INVALID;
         conn_properties[i].team_characteristic_handle = CHARACTERISTIC_HANDLE_INVALID;
-        conn_properties[i].temperature = TEMP_INVALID;
-        conn_properties[i].unit = UNIT_INVALID;
+        conn_properties[i].weight = TEMP_INVALID;
         conn_properties[i].rssi = RSSI_INVALID;
         conn_properties[i].power_control_active = TX_POWER_CONTROL_INACTIVE;
         conn_properties[i].tx_power = TX_POWER_INVALID;
@@ -762,37 +659,6 @@ static float translate_IEEE_11073_temperature_to_float(IEEE_11073_float const *I
     return ((float) mantissa) * pow(10.0f, (float) exponent);
 }
 
-/**************************************************************************//**
- * Health Thermometer - Temperature Measurement
- * Indication changed callback
- *
- * Called when indication of temperature measurement is enabled/disabled by
- * the client.
- *****************************************************************************/
-void sl_bt_ht_temperature_measurement_indication_changed_cb(uint8_t connection,
-        sl_bt_gatt_client_config_flag_t client_config)
-{
-    sl_status_t sc;
-    app_connection = connection;
-    // Indication or notification enabled.
-    if(sl_bt_gatt_disable != client_config)
-    {
-        // Start timer used for periodic indications.
-        sc = sl_simple_timer_start(&app_periodic_timer,
-        SL_BT_HT_MEASUREMENT_INTERVAL_SEC * 1000, app_periodic_timer_cb,
-        NULL,
-        true);
-        app_assert_status(sc);
-        // Send first indication.
-        app_periodic_timer_cb(&app_periodic_timer, NULL);
-    }
-    // Indications disabled.
-    else
-    {
-        // Stop timer used for periodic indications.
-        (void) sl_simple_timer_stop(&app_periodic_timer);
-    }
-}
 
 /**************************************************************************//**
  * Simple Button
@@ -819,50 +685,6 @@ void sl_button_on_change(const sl_button_t *handle)
     }
 }
 
-/**************************************************************************//**
- * Timer callback
- * Called periodically to time periodic temperature measurements and indications.
- *****************************************************************************/
-static void app_periodic_timer_cb(sl_simple_timer_t *timer, void *data)
-{
-    (void) data;
-    (void) timer;
-    sl_status_t sc;
-    int32_t temperature = 0;
-    uint32_t humidity = 0;
-    float tmp_c = 0.0;
-    // float tmp_f = 0.0;
-    uint8_t buf[17] = { 0 };
-    size_t readlen = 0;
-
-    // Measure temperature; units are % and milli-Celsius.
-    sc = sl_sensor_rht_get(&humidity, &temperature);
-    if(sc != SL_STATUS_OK)
-    {
-        app_log_warning("Invalid RHT reading: %lu %ld\n\r", humidity, temperature);
-    }
-
-    // button 0 pressed: overwrite temperature with -20C.
-    if(app_btn0_pressed)
-    {
-        temperature = -20 * 1000;
-    }
-
-    tmp_c = (float) temperature / 1000;
-    //app_log_info("Temperature: %5.2f C\n\r", tmp_c);
-    // Send temperature measurement indication to connected client.
-
-
-    sc = sl_bt_ht_temperature_measurement_indicate(app_connection, temperature, false);
-    if(sc)
-    {
-        app_log_warning("Failed to send temperature measurement indication\n\r");
-    }
-
-    sc = sl_bt_gatt_server_read_attribute_value(gattdb_temperature_measurement, 0, sizeof(buf), &readlen, buf);
-    app_assert_status(sc);
-
-}
 
 // Print parameters to STDOUT. CR used to display results.
 void print_values(void)
@@ -886,11 +708,11 @@ void print_values(void)
         {
             if(false == print_tx_power)
             {
-                app_log_append("ADDR   TEMP   WEIGHT  RSSI |");
+                app_log_append("ADDR   WEIGHT  RSSI |");
             }
             else
             {
-                app_log_append("ADDR   TEMP   WEIGHT  RSSI    TXPW |");
+                app_log_append("ADDR   WEIGHT  RSSI    TXPW |");
             }
         }
         app_log_append("\n\r");
@@ -902,13 +724,10 @@ void print_values(void)
     // Print parameters
     for(i = 0u; i < SL_BT_CONFIG_MAX_CONNECTIONS; i++)
     {
-        if((TEMP_INVALID != conn_properties[i].temperature) && (RSSI_INVALID != conn_properties[i].rssi))
+        if((TEMP_INVALID != conn_properties[i].weight) && (RSSI_INVALID != conn_properties[i].rssi))
         {
             app_log_append("%04x ", conn_properties[i].server_address);
-            app_log_append("%6.2f", conn_properties[i].temperature);
-            app_log_append("%c ", conn_properties[i].unit);
-            app_log_append("%6.2f", conn_properties[i].weight);
-            app_log_append("%c ", conn_properties[i].weightunit);
+            app_log_append("%6.3fkg ", conn_properties[i].weight);
             app_log_append("% 3d", conn_properties[i].rssi);
             app_log_append("dBm");
             if(true == print_tx_power)
@@ -920,11 +739,11 @@ void print_values(void)
         }
         else if(false == print_tx_power)
         {
-            app_log_append("---- ------- ------- ------|");
+            app_log_append("---- ------- ------|");
         }
         else
         {
-            app_log_append("----  ------ ------ ------  ------|");
+            app_log_append("---- ------ ------  ------|");
         }
     }
     app_log_append("\r");

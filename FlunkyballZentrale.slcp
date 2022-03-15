@@ -21,9 +21,9 @@ component:
 - {id: iostream_retarget_stdio}
 - instance: [btn0]
   id: simple_button
+- {id: bluetooth_feature_gatt_server}
 - instance: [example]
   id: cli
-- {id: bluetooth_feature_gatt_server}
 - {id: bluetooth_feature_sm}
 - {id: mpu}
 - {id: gatt_configuration}
@@ -36,11 +36,9 @@ component:
 - {id: bluetooth_feature_gatt}
 - {id: brd4314a}
 - {id: BGM220PC22HNA}
-- {id: sensor_rht_mock}
 - {id: app_log}
 - {id: sl_system}
 - {id: bluetooth_feature_connection}
-- {id: health_thermometer}
 - {id: bluetooth_feature_advertiser}
 - instance: [vcom]
   id: iostream_usart

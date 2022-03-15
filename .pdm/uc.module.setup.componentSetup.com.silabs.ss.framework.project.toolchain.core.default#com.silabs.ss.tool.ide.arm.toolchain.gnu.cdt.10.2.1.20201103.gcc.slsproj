@@ -285,14 +285,6 @@
             <file name="libnvm3_CM33_gcc.a" uri="studio:/sdk/platform/emdrv/nvm3/lib/libnvm3_CM33_gcc.a"/>
           </folder>
         </folder>
-        <folder name="tempdrv">
-          <folder name="src">
-            <file name="tempdrv.c" uri="studio:/sdk/platform/emdrv/tempdrv/src/tempdrv.c"/>
-          </folder>
-          <folder name="inc">
-            <file name="tempdrv.h" uri="studio:/sdk/platform/emdrv/tempdrv/inc/tempdrv.h"/>
-          </folder>
-        </folder>
       </folder>
       <folder name="emlib">
         <folder name="src">
@@ -398,17 +390,9 @@
       </folder>
       <folder name="bluetooth">
         <folder name="common">
-          <folder name="health_thermometer">
-            <file name="sl_health_thermometer.c" uri="studio:/sdk/app/bluetooth/common/health_thermometer/sl_health_thermometer.c"/>
-            <file name="sl_health_thermometer.h" uri="studio:/sdk/app/bluetooth/common/health_thermometer/sl_health_thermometer.h"/>
-          </folder>
           <folder name="ota_dfu">
             <file name="sl_ota_dfu.c" uri="studio:/sdk/app/bluetooth/common/ota_dfu/sl_ota_dfu.c"/>
             <file name="sl_ota_dfu.h" uri="studio:/sdk/app/bluetooth/common/ota_dfu/sl_ota_dfu.h"/>
-          </folder>
-          <folder name="sensor_rht">
-            <file name="sl_sensor_rht_mock.c" uri="studio:/sdk/app/bluetooth/common/sensor_rht/sl_sensor_rht_mock.c"/>
-            <file name="sl_sensor_rht.h" uri="studio:/sdk/app/bluetooth/common/sensor_rht/sl_sensor_rht.h"/>
           </folder>
           <folder name="simple_timer_freertos">
             <file name="sl_simple_timer_freertos.c" uri="studio:/sdk/app/bluetooth/common/simple_timer_freertos/sl_simple_timer_freertos.c"/>
@@ -845,7 +829,6 @@
   <includePath uri="studio:/sdk/util/third_party/freertos/kernel/include"/>
   <includePath uri="studio:/sdk/util/third_party/freertos/kernel/portable/GCC/ARM_CM33_NTZ/non_secure"/>
   <includePath uri="studio:/sdk/platform/emdrv/gpiointerrupt/inc"/>
-  <includePath uri="studio:/sdk/app/bluetooth/common/health_thermometer"/>
   <includePath uri="studio:/sdk/platform/service/hfxo_manager/inc"/>
   <includePath uri="studio:/sdk/platform/service/iostream/inc"/>
   <includePath uri="studio:/sdk/util/third_party/crypto/sl_component/sl_mbedtls_support/config"/>
@@ -869,14 +852,12 @@
   <includePath uri="studio:/sdk/platform/radio/rail_lib/plugin/rail_util_pti"/>
   <includePath uri="studio:/sdk/util/third_party/crypto/sl_component/se_manager/inc"/>
   <includePath uri="studio:/sdk/util/third_party/crypto/sl_component/se_manager/src"/>
-  <includePath uri="studio:/sdk/app/bluetooth/common/sensor_rht"/>
   <includePath uri="studio:/sdk/util/silicon_labs/silabs_core/memory_manager"/>
   <includePath uri="studio:/sdk/app/bluetooth/common/simple_timer_freertos"/>
   <includePath uri="studio:/sdk/platform/common/toolchain/inc"/>
   <includePath uri="studio:/sdk/platform/service/system/inc"/>
   <includePath uri="studio:/sdk/platform/service/sleeptimer/inc"/>
   <includePath uri="studio:/sdk/util/third_party/crypto/sl_component/sl_protocol_crypto/src"/>
-  <includePath uri="studio:/sdk/platform/emdrv/tempdrv/inc"/>
   <macroDefinition name="BGM220PC22HNA"/>
   <macroDefinition name="SL_BOARD_NAME" value="&quot;BRD4314A&quot;"/>
   <macroDefinition name="SL_BOARD_REV" value="&quot;A02&quot;"/>
