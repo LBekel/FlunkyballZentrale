@@ -33,9 +33,10 @@
 #include "sl_status.h"
 #include "app_log.h"
 #include "app.h"
+#include "game.h"
 
 #define APP_INIT_TASK_NAME          "app_init"
-#define APP_INIT_TASK_STACK_SIZE    200
+#define APP_INIT_TASK_STACK_SIZE    configMINIMAL_STACK_SIZE
 #define APP_INIT_TASK_STATIC        1
 
 #if (APP_INIT_TASK_STATIC == 1)
@@ -52,6 +53,7 @@ void app_init_task(void *p_arg)
 {
   (void)p_arg;
   app_log_info("\n\n\rFlunkyball Zentrale\n\r");
+  game_init();
   vTaskDelete(NULL);
 }
 
@@ -64,7 +66,7 @@ void app_init(void)
   #if (APP_INIT_TASK_STATIC == 1)
   xTaskCreateStatic(app_init_task,
                     APP_INIT_TASK_NAME,
-                    configMINIMAL_STACK_SIZE,
+                    APP_INIT_TASK_STACK_SIZE,
                     NULL,
                     tskIDLE_PRIORITY,
                     app_init_task_stack,

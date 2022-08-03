@@ -31,6 +31,24 @@
 #ifndef APP_H
 #define APP_H
 
+#include "em_common.h"
+typedef struct
+{
+    uint8_t connection_handle;
+    int8_t rssi;
+    bool power_control_active;
+    int8_t tx_power;
+    int8_t remote_tx_power;
+    uint16_t server_address;
+    uint32_t weight_service_handle;
+    uint16_t weight_characteristic_handle;
+    uint32_t game_service_handle;
+    uint16_t team_characteristic_handle;
+    uint8_t team;
+    float weight;
+    char weightunit;
+} conn_properties_t;
+
 /**************************************************************************//**
  * Application Init.
  *****************************************************************************/
@@ -40,5 +58,7 @@ void app_init(void);
  * Application Process Action.
  *****************************************************************************/
 void app_process_action(void);
+void get_player_data(conn_properties_t *conn_properties_ext, uint8_t player);
+bool getbuttonstate(void);
 
 #endif // APP_H

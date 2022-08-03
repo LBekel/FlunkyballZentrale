@@ -15,15 +15,15 @@ include:
 - path: ''
   file_list:
   - {path: app.h}
-sdk: {id: gecko_sdk, version: 4.0.1}
+sdk: {id: gecko_sdk, version: 4.0.2}
 toolchain_settings: []
 component:
 - {id: iostream_retarget_stdio}
 - instance: [btn0]
   id: simple_button
-- {id: bluetooth_feature_gatt_server}
 - instance: [example]
   id: cli
+- {id: bluetooth_feature_gatt_server}
 - {id: bluetooth_feature_sm}
 - {id: mpu}
 - {id: gatt_configuration}

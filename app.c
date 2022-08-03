@@ -64,22 +64,7 @@ typedef enum
     running
 } conn_state_t;
 
-typedef struct
-{
-    uint8_t connection_handle;
-    int8_t rssi;
-    bool power_control_active;
-    int8_t tx_power;
-    int8_t remote_tx_power;
-    uint16_t server_address;
-    uint32_t weight_service_handle;
-    uint16_t weight_characteristic_handle;
-    uint32_t game_service_handle;
-    uint16_t team_characteristic_handle;
-    uint8_t team;
-    float weight;
-    char weightunit;
-} conn_properties_t;
+
 
 typedef struct
 {
@@ -485,7 +470,7 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
                 conn_properties[table_index].rssi = evt->data.evt_connection_rssi.rssi;
             }
 
-            print_values();
+            //print_values();
             break;
 
             // -------------------------------
@@ -792,6 +777,17 @@ void team_counter(uint8_t team, bool add)
         app_assert_status(sc);
     }
 }
+
+void get_player_data(conn_properties_t* conn_properties_ext, uint8_t player)
+{
+  conn_properties_ext->weight = conn_properties[player].weight;
+}
+
+bool getbuttonstate(void)
+{
+    return app_btn0_pressed;
+}
+
 
 #ifdef SL_CATALOG_CLI_PRESENT
 void hello(sl_cli_command_arg_t *arguments)
