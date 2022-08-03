@@ -1,36 +1,13 @@
 
 
-#include <em_common.h>
+#include <sl_common.h>
 #include "sl_bluetooth.h"
+#include "sl_assert.h"
 #include "sl_bt_stack_init.h"
 
 #ifdef SL_COMPONENT_CATALOG_PRESENT
 #include "sl_component_catalog.h"
-#include "sli_bt_gattdb_def.h"
-#ifdef SL_CATALOG_GATT_CONFIGURATION_PRESENT
-extern const sli_bt_gattdb_t gattdb;
-#else
-const sli_bt_gattdb_t gattdb = {0};
-#endif // SL_CATALOG_GATT_CONFIGURATION_PRESENT
 #endif // SL_COMPONENT_CATALOG_PRESENT
-
-#include "sl_bt_power_control_config.h"
-#include "sl_ota_dfu.h"
-
-static const sl_bt_configuration_t config = SL_BT_CONFIG_DEFAULT;
-
-/** @brief Table of used BGAPI classes */
-static const struct sli_bgapi_class * const bt_class_table[] =
-{
-  SL_BT_BGAPI_CLASS(system),
-  SL_BT_BGAPI_CLASS(advertiser),
-  SL_BT_BGAPI_CLASS(scanner),
-  SL_BT_BGAPI_CLASS(connection),
-  SL_BT_BGAPI_CLASS(gatt),
-  SL_BT_BGAPI_CLASS(gatt_server),
-  SL_BT_BGAPI_CLASS(sm),
-  NULL
-};
 #if !defined(SL_CATALOG_KERNEL_PRESENT)
 /**
  * Override @ref PendSV_Handler for the Link Layer task when Bluetooth runs
@@ -50,15 +27,13 @@ void sl_bt_init(void)
   NVIC_ClearPendingIRQ(PendSV_IRQn);
   NVIC_EnableIRQ(PendSV_IRQn);
 #endif
-  sl_bt_configure_backwards_compatibility(&config);
-  sl_bt_init_power_control();
 
   // Stack initialization could fail, e.g., due to out of memory.
-  // The failure could not be returned to user yet as the system initialization
-  // does not return an error code.
-  sl_status_t err = sl_bt_init_stack(&config);
-  (void) err;
-  sl_bt_init_classes(bt_class_table);
+  // The failure could not be returned to user as the system initialization
+  // does not return an error code. Use the EFM_ASSERT to catch the failure,
+  // which requires either DEBUG_EFM or DEBUG_EFM_USER is defined.
+  sl_status_t err = sl_bt_stack_init();
+  EFM_ASSERT(err == SL_STATUS_OK);
 }
 
 SL_WEAK void sl_bt_on_event(sl_bt_msg_t* evt)
@@ -68,7 +43,6 @@ SL_WEAK void sl_bt_on_event(sl_bt_msg_t* evt)
 
 void sl_bt_process_event(sl_bt_msg_t *evt)
 {
-  sl_bt_ota_dfu_on_event(evt);
   sl_bt_on_event(evt);
 }
 

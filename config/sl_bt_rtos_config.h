@@ -41,7 +41,7 @@
 // <i> Default: 1000
 // <i> Define the stack size of the Bluetooth event handler task. The value is in bytes
 // <i> and will be word aligned when it is applied at the task creation.
-#define SL_BT_RTOS_EVENT_HANDLER_STACK_SIZE     (1000)
+#define SL_BT_RTOS_EVENT_HANDLER_STACK_SIZE     1000
 
 // </h> End Priority Configuration for Bluetooth RTOS Tasks
 

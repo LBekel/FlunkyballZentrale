@@ -12,6 +12,7 @@
 #include "sl_device_init_emu.h"
 #include "pa_conversions_efr32.h"
 #include "sl_rail_util_pti.h"
+#include "btl_interface.h"
 #include "sl_board_control.h"
 #include "sl_bt_rtos_adaptation.h"
 #include "sl_sleeptimer.h"
@@ -24,6 +25,8 @@
 #include "nvm3_default.h"
 #include "sl_simple_button_instances.h"
 #include "sl_cli_instances.h"
+#include "psa/crypto.h"
+#include "sli_protocol_crypto.h"
 #include "cmsis_os2.h"
 #include "sl_iostream_init_instances.h"
 #include "sl_bluetooth.h"
@@ -42,6 +45,7 @@ void sl_platform_init(void)
   sl_device_init_clocks();
   sl_device_init_emu();
   sl_board_init();
+  bootloader_init();
   nvm3_initDefault();
   osKernelInitialize();
   sl_power_manager_init();
@@ -66,6 +70,8 @@ void sl_service_init(void)
   sl_iostream_stdlib_disable_buffering();
   sl_mbedtls_init();
   sl_mpu_disable_execute_from_ram();
+  psa_crypto_init();
+  sli_aes_seed_mask();
   sl_iostream_init_instances();
   sl_cli_instances_init();
 }

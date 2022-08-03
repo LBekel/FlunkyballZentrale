@@ -15,7 +15,7 @@ include:
 - path: ''
   file_list:
   - {path: app.h}
-sdk: {id: gecko_sdk, version: 4.0.2}
+sdk: {id: gecko_sdk, version: 4.1.0}
 toolchain_settings: []
 component:
 - {id: iostream_retarget_stdio}
@@ -43,6 +43,7 @@ component:
 - instance: [vcom]
   id: iostream_usart
 - {id: bluetooth_feature_system}
+- {id: cmsis_dsp}
 - {id: bluetooth_feature_scanner}
 - {id: printf}
 - {id: component_catalog}
