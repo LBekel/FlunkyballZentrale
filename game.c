@@ -79,9 +79,9 @@ static void game_task(void *arg)
                 {
                     get_player_data(&conn_properties[var], var);
                     readytostart = readytostart && conn_properties[var].weight > 0.3;
-                    app_log_info("Weight %d: %6.3fkg ",var,  conn_properties[var].weight);
+                    app_log_append("Weight %d: %6.3fkg ",var,  conn_properties[var].weight);
                 }
-                app_log_info("\r\n");
+                app_log_append("\n\r");
                 if(readytostart)
                 {
                     gamestate = send_start_team;
