@@ -73,7 +73,8 @@ static void game_task(void *arg)
         switch(gamestate)
         {
             case check_all_scales:
-                app_log_info("check_all_scales\r\n");
+                //app_log_info("check_all_scales\r\n");
+                ;
                 bool readytostart = true;
                 for(uint8_t var = 0; var < MAXPLAYER; var++)
                 {

@@ -12,7 +12,6 @@
 #include "sl_device_init_emu.h"
 #include "pa_conversions_efr32.h"
 #include "sl_rail_util_pti.h"
-#include "btl_interface.h"
 #include "sl_board_control.h"
 #include "sl_bt_rtos_adaptation.h"
 #include "sl_sleeptimer.h"
@@ -45,7 +44,6 @@ void sl_platform_init(void)
   sl_device_init_clocks();
   sl_device_init_emu();
   sl_board_init();
-  bootloader_init();
   nvm3_initDefault();
   osKernelInitialize();
   sl_power_manager_init();

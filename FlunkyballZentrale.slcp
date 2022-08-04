@@ -47,8 +47,7 @@ component:
 - {id: bluetooth_feature_scanner}
 - {id: printf}
 - {id: component_catalog}
-- {id: ota_dfu}
-- {id: bootloader_interface}
+- {id: freertos_heap_4}
 - {id: app_assert}
 other_file:
 - {path: create_bl_files.bat}
@@ -58,6 +57,10 @@ template_contribution:
   name: cli_command
   priority: 0
   value: {name: hello, handler: hello, help: hello}
+- {name: memory_ram_start, priority: 0, value: 536870912}
+- {name: memory_ram_size, priority: 0, value: 32768}
+- {name: memory_flash_start, priority: 0, value: 32768}
+- {name: memory_flash_size, priority: 0, value: 491520}
 configuration:
 - {name: SL_STACK_SIZE, value: '2752'}
 - {name: SL_HEAP_SIZE, value: '8000'}

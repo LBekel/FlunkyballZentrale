@@ -51,51 +51,6 @@
 			<locationURI>STUDIO_SDK_LOC/hardware/board/src/sl_board_init.c</locationURI>
 		</link>
 		<link>
-			<name>gecko_sdk_4.1.0/platform/bootloader/api/application_properties.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/bootloader/api/application_properties.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/bootloader/api/btl_errorcode.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/bootloader/api/btl_errorcode.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/bootloader/api/btl_interface.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/bootloader/api/btl_interface.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/bootloader/api/btl_interface.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/bootloader/api/btl_interface.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/bootloader/api/btl_interface_parser.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/bootloader/api/btl_interface_parser.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/bootloader/api/btl_interface_storage.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/bootloader/api/btl_interface_storage.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/bootloader/api/btl_interface_storage.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/bootloader/api/btl_interface_storage.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/bootloader/api/btl_reset_info.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/bootloader/api/btl_reset_info.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/bootloader/app_properties/app_properties.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/bootloader/app_properties/app_properties.c</locationURI>
-		</link>
-		<link>
 			<name>gecko_sdk_4.1.0/platform/common/inc/sl_assert.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/common/inc/sl_assert.h</locationURI>

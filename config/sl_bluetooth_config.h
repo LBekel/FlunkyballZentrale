@@ -36,7 +36,7 @@
 // <i> advertising and scanning. The default value is an estimation for achieving adequate throughput
 // <i> and supporting multiple simultaneous connections. Consider increasing this value for
 // <i> higher data throughput over connections, advertising or scanning long advertisement data.
-#define SL_BT_CONFIG_BUFFER_SIZE    (3150)
+#define SL_BT_CONFIG_BUFFER_SIZE    3150
 
 // </h> End Bluetooth Stack Configuration
 
