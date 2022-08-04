@@ -234,7 +234,7 @@
 #define configOVERRIDE_DEFAULT_TICK_CONFIGURATION     1
 
 /* Maximum size of task name. */
-#define configMAX_TASK_NAME_LEN                       10
+#define configMAX_TASK_NAME_LEN                       20
 
 /* Use queue sets? */
 #define configUSE_QUEUE_SETS                          0

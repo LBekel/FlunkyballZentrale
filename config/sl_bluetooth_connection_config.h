@@ -5,6 +5,6 @@
 // <o SL_BT_CONFIG_MAX_CONNECTIONS> Max number of connections reserved for user <0-32>
 // <i> Default: 4
 // <i> Define the number of connections the application needs.
-#define SL_BT_CONFIG_MAX_CONNECTIONS     4
+#define SL_BT_CONFIG_MAX_CONNECTIONS     15
 // <<< end of configuration section >>>
 #endif

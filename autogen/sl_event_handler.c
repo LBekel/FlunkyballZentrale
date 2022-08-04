@@ -23,7 +23,6 @@
 #include "sl_mpu.h"
 #include "nvm3_default.h"
 #include "sl_simple_button_instances.h"
-#include "sl_cli_instances.h"
 #include "psa/crypto.h"
 #include "sli_protocol_crypto.h"
 #include "cmsis_os2.h"
@@ -71,7 +70,6 @@ void sl_service_init(void)
   psa_crypto_init();
   sli_aes_seed_mask();
   sl_iostream_init_instances();
-  sl_cli_instances_init();
 }
 
 void sl_stack_init(void)

@@ -86,11 +86,6 @@
 			<locationURI>STUDIO_SDK_LOC/platform/common/inc/sl_status.h</locationURI>
 		</link>
 		<link>
-			<name>gecko_sdk_4.1.0/platform/common/inc/sl_string.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/common/inc/sl_string.h</locationURI>
-		</link>
-		<link>
 			<name>gecko_sdk_4.1.0/platform/common/inc/sli_cmsis_os2_ext_task_register.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/common/inc/sli_cmsis_os2_ext_task_register.h</locationURI>
@@ -104,11 +99,6 @@
 			<name>gecko_sdk_4.1.0/platform/common/src/sl_slist.c</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/common/src/sl_slist.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/common/src/sl_string.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/common/src/sl_string.c</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.0/platform/common/src/sli_cmsis_os2_ext_task_register.c</name>
@@ -714,81 +704,6 @@
 			<name>gecko_sdk_4.1.0/platform/radio/rail_lib/common/rail_types.h</name>
 			<type>1</type>
 			<locationURI>STUDIO_SDK_LOC/platform/radio/rail_lib/common/rail_types.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/inc/sl_cli.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/inc/sl_cli.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/inc/sl_cli_arguments.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/inc/sl_cli_arguments.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/inc/sl_cli_command.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/inc/sl_cli_command.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/inc/sl_cli_input.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/inc/sl_cli_input.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/inc/sl_cli_tokenize.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/inc/sl_cli_tokenize.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/inc/sl_cli_types.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/inc/sl_cli_types.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/src/sl_cli.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/src/sl_cli.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/src/sl_cli_arguments.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/src/sl_cli_arguments.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/src/sl_cli_command.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/src/sl_cli_command.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/src/sl_cli_input.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/src/sl_cli_input.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/src/sl_cli_io.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/src/sl_cli_io.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/src/sl_cli_tokenize.c</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/src/sl_cli_tokenize.c</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/src/sli_cli_arguments.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/src/sli_cli_arguments.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/src/sli_cli_input.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/src/sli_cli_input.h</locationURI>
-		</link>
-		<link>
-			<name>gecko_sdk_4.1.0/platform/service/cli/src/sli_cli_io.h</name>
-			<type>1</type>
-			<locationURI>STUDIO_SDK_LOC/platform/service/cli/src/sli_cli_io.h</locationURI>
 		</link>
 		<link>
 			<name>gecko_sdk_4.1.0/platform/service/device_init/inc/sl_device_init_clocks.h</name>

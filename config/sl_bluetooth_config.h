@@ -28,7 +28,7 @@
 // <o SL_BT_CONFIG_MAX_SOFTWARE_TIMERS> Max number of software timers <0-16>
 // <i> Default: 4
 // <i> Define the number of software timers the application needs.  Each timer needs resources from the stack to be implemented. Increasing amount of soft timers may cause degraded performance in some use cases.
-#define SL_BT_CONFIG_MAX_SOFTWARE_TIMERS     (4)
+#define SL_BT_CONFIG_MAX_SOFTWARE_TIMERS     4
 
 // <o SL_BT_CONFIG_BUFFER_SIZE> Buffer memory size for Bluetooth stack
 // <i> Default: 3150
@@ -36,7 +36,7 @@
 // <i> advertising and scanning. The default value is an estimation for achieving adequate throughput
 // <i> and supporting multiple simultaneous connections. Consider increasing this value for
 // <i> higher data throughput over connections, advertising or scanning long advertisement data.
-#define SL_BT_CONFIG_BUFFER_SIZE    3150
+#define SL_BT_CONFIG_BUFFER_SIZE    1000
 
 // </h> End Bluetooth Stack Configuration
 
