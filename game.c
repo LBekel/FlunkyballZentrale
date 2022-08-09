@@ -76,11 +76,12 @@ static void game_task(void *arg)
                 //app_log_info("check_all_scales\r\n");
                 ;
                 bool readytostart = true;
+                app_log_append("Weight: ");
                 for(uint8_t var = 0; var < MAXPLAYER; var++)
                 {
                     get_player_data(&conn_properties[var], var);
                     readytostart = readytostart && conn_properties[var].weight > 0.3;
-                    app_log_append("Weight %d: %6.3fkg ",var,  conn_properties[var].weight);
+                    app_log_append("%d: %6.3fkg ",var,  conn_properties[var].weight);
                 }
                 app_log_append("\n\r");
                 if(readytostart)

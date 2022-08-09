@@ -104,6 +104,7 @@ static uint8_t find_service_in_advertisement(uint8_t *data, uint8_t len);
 // Service UUID defined by Bluetooth SIG
 //181D
 static const uint8array weight_service = {.len = 2 , .data = {0x1D, 0x18}};
+static const uint8array generic_service = {.len = 2 , .data = {0x00, 0x18}};
 
 //10f2fce7-1ff8-4bad-8960-092fe5f7ae8f
 static const uint8array game_service = {.len = 16 , .data = {0x8f,0xae,0xf7,0xe5,
@@ -214,9 +215,9 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
             // Parse advertisement packets
             if(evt->data.evt_scanner_scan_report.packet_type == 0)
             {
-                // If a thermometer advertisement is found...
+                // If a weight advertisement is found...
                 if(find_service_in_advertisement(&(evt->data.evt_scanner_scan_report.data.data[0]),
-                        evt->data.evt_scanner_scan_report.data.len) != 0)
+                        evt->data.evt_scanner_scan_report.data.len) == 1)
                 {
                     // then stop scanning for a while
                     sc = sl_bt_scanner_stop();
@@ -229,6 +230,18 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
                                 NULL);
                         app_assert_status(sc);
                         conn_state = opening;
+                    }
+                }
+                if(find_service_in_advertisement(&(evt->data.evt_scanner_scan_report.data.data[0]),
+                        evt->data.evt_scanner_scan_report.data.len) == 2)
+                {
+                    // and connect to that device
+                    if(active_connections_num < SL_BT_CONFIG_MAX_CONNECTIONS)
+                    {
+                        sc = sl_bt_connection_open(evt->data.evt_scanner_scan_report.address,
+                                evt->data.evt_scanner_scan_report.address_type, sl_bt_gap_1m_phy,
+                                NULL);
+                        app_assert_status(sc);
                     }
                 }
             }
@@ -264,11 +277,28 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
                 // Save service handle for future reference
                 if(compare_uuid(&(evt->data.evt_gatt_service.uuid), &weight_service))
                 {
+                    app_log_info("Weight service\n\r");
                     conn_properties[table_index].weight_service_handle = evt->data.evt_gatt_service.service;
                 }
                 else if(compare_uuid(&(evt->data.evt_gatt_service.uuid), &game_service))
                 {
+                    app_log_info("Game service\n\r");
                     conn_properties[table_index].game_service_handle = evt->data.evt_gatt_service.service;
+                }
+                else if (compare_uuid(&(evt->data.evt_gatt_service.uuid), &generic_service))
+                {
+                    app_log_info("Generic service\n\r");
+//                    if(conn_state != scanning)
+//                    {
+//                        // start scanning again to find new devices
+//                        sc = sl_bt_scanner_start(sl_bt_gap_1m_phy, sl_bt_scanner_discover_generic);
+//                        app_assert_status_f(sc, "Failed to start discovery #3\n\r");
+//                        // Start general advertising and enable connections.
+//                        sc = sl_bt_advertiser_start(advertising_set_handle, sl_bt_advertiser_general_discoverable,
+//                                sl_bt_advertiser_connectable_scannable);
+//                        app_assert_status_f(sc, "Failed to start advertising\n\r");
+//                        conn_state = scanning;
+//                    }
                 }
             }
             break;
@@ -536,10 +566,15 @@ static uint8_t find_service_in_advertisement(uint8_t *data, uint8_t len)
         // Partial ($02) or complete ($03) list of 16-bit UUIDs
         if(ad_field_type == 0x02 || ad_field_type == 0x03)
         {
-            // compare UUID to Health Thermometer service UUID
+            // compare UUID to weight scale service UUID
             if(memcmp(&data[i + 2], weight_service.data, 2) == 0)
             {
                 return 1;
+            }
+            // compare UUID to weight scale service UUID
+            if(memcmp(&data[i + 2], generic_service.data, 2) == 0)
+            {
+                return 2;
             }
         }
         // advance to the next AD struct
@@ -567,6 +602,7 @@ static void add_connection(uint8_t connection, uint16_t address)
     conn_properties[active_connections_num].connection_handle = connection;
     conn_properties[active_connections_num].server_address = address;
     active_connections_num++;
+    app_log_info("new connection %d\n\r", active_connections_num);
 }
 
 // Remove a connection from the connection_properties array
@@ -602,6 +638,7 @@ static void remove_connection(uint8_t connection)
         conn_properties[i].remote_tx_power = TX_POWER_INVALID;
         conn_properties[i].team = TEAM_INVALID;
     }
+    app_log_info("removed connection %d\n\r", active_connections_num);
 }
 
 
