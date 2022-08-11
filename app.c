@@ -79,6 +79,20 @@ static conn_properties_t conn_properties[SL_BT_CONFIG_MAX_CONNECTIONS];
 // Counter of active connections
 static uint8_t active_connections_num;
 
+static uint8_t gattdb_weight_measurements[] = {
+        gattdb_weight_measurement_1,
+        gattdb_weight_measurement_2,
+        gattdb_weight_measurement_3,
+        gattdb_weight_measurement_4,
+        gattdb_weight_measurement_5,
+        gattdb_weight_measurement_6,
+        gattdb_weight_measurement_7,
+        gattdb_weight_measurement_8,
+        gattdb_weight_measurement_9,
+        gattdb_weight_measurement_10
+
+};
+
 // State of the connection under establishment
 static conn_state_t conn_state;
 
@@ -146,12 +160,68 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
         // This event indicates the device has started and the radio is ready.
         // Do not call any stack command before receiving this boot event!
         case sl_bt_evt_system_boot_id:
-            // Print boot message.
-            app_log_info("Bluetooth stack booted: v%d.%d.%d-b%d\n\r",
-                    evt->data.evt_system_boot.major,
-                    evt->data.evt_system_boot.minor,
-                    evt->data.evt_system_boot.patch,
-                    evt->data.evt_system_boot.build);
+          // Print boot message.
+          app_log_info("Bluetooth stack booted: v%d.%d.%d-b%d\n",
+                       evt->data.evt_system_boot.major,
+                       evt->data.evt_system_boot.minor,
+                       evt->data.evt_system_boot.patch,
+                       evt->data.evt_system_boot.build);
+
+          // Extract unique ID from BT Address.
+          sc = sl_bt_system_get_identity_address(&address, &address_type);
+          app_assert_status(sc);
+
+          // Pad and reverse unique ID to get System ID.
+          system_id[0] = address.addr[5];
+          system_id[1] = address.addr[4];
+          system_id[2] = address.addr[3];
+          system_id[3] = 0xFF;
+          system_id[4] = 0xFE;
+          system_id[5] = address.addr[2];
+          system_id[6] = address.addr[1];
+          system_id[7] = address.addr[0];
+
+          sc = sl_bt_gatt_server_write_attribute_value(gattdb_system_id,
+                                                       0,
+                                                       sizeof(system_id),
+                                                       system_id);
+          app_assert_status(sc);
+
+          app_log_info("Bluetooth %s address: %02X:%02X:%02X:%02X:%02X:%02X\n",
+                       address_type ? "static random" : "public device",
+                       address.addr[5],
+                       address.addr[4],
+                       address.addr[3],
+                       address.addr[2],
+                       address.addr[1],
+                       address.addr[0]);
+
+          // Create an advertising set.
+          sc = sl_bt_advertiser_create_set(&advertising_set_handle);
+          app_assert_status(sc);
+
+          // Generate data for advertising
+          sc = sl_bt_legacy_advertiser_generate_data(advertising_set_handle,
+                                                     sl_bt_advertiser_general_discoverable);
+          app_assert_status(sc);
+
+          // Set advertising interval to 100ms.
+          sc = sl_bt_advertiser_set_timing(
+            advertising_set_handle, // advertising set handle
+            160, // min. adv. interval (milliseconds * 1.6)
+            160, // max. adv. interval (milliseconds * 1.6)
+            0,   // adv. duration
+            0);  // max. num. adv. events
+          app_assert_status(sc);
+
+          // Start advertising and enable connections.
+          sc = sl_bt_legacy_advertiser_start(advertising_set_handle,
+                                             sl_bt_advertiser_connectable_scannable);
+          app_assert_status(sc);
+
+          app_log_info("Started advertising\n");
+
+
 
             // Set passive scanning on 1Mb PHY
             sc = sl_bt_scanner_set_mode(sl_bt_gap_1m_phy, SCAN_PASSIVE);
@@ -163,47 +233,9 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
             sc = sl_bt_connection_set_default_parameters(CONN_INTERVAL_MIN, CONN_INTERVAL_MAX, CONN_RESPONDER_LATENCY,
             CONN_TIMEOUT, CONN_MIN_CE_LENGTH, CONN_MAX_CE_LENGTH);
             app_assert_status(sc);
-            // Start scanning - looking for thermometer devices
+            // Start scanning - looking for devices
             sc = sl_bt_scanner_start(sl_bt_gap_1m_phy, sl_bt_scanner_discover_generic);
             app_assert_status_f(sc, "Failed to start discovery #1\n\r");
-
-            // Extract unique ID from BT Address.
-            sc = sl_bt_system_get_identity_address(&address, &address_type);
-            app_assert_status(sc);
-
-            // Pad and reverse unique ID to get System ID.
-            system_id[0] = address.addr[5];
-            system_id[1] = address.addr[4];
-            system_id[2] = address.addr[3];
-            system_id[3] = 0xFF;
-            system_id[4] = 0xFE;
-            system_id[5] = address.addr[2];
-            system_id[6] = address.addr[1];
-            system_id[7] = address.addr[0];
-
-            sc = sl_bt_gatt_server_write_attribute_value(gattdb_system_id, 0, sizeof(system_id), system_id);
-            app_assert_status(sc);
-
-            app_log_info("Bluetooth %s address: %02X:%02X:%02X:%02X:%02X:%02X\n\r",
-                    address_type ? "static random" : "public device", address.addr[5], address.addr[4], address.addr[3],
-                    address.addr[2], address.addr[1], address.addr[0]);
-
-            // Create an advertising set.
-            sc = sl_bt_advertiser_create_set(&advertising_set_handle);
-            app_assert_status(sc);
-
-            // Set advertising interval to 100ms.
-            sc = sl_bt_advertiser_set_timing(advertising_set_handle, // advertising set handle
-                    160, // min. adv. interval (milliseconds * 1.6)
-                    160, // max. adv. interval (milliseconds * 1.6)
-                    0,   // adv. duration
-                    0);  // max. num. adv. events
-            app_assert_status(sc);
-            // Start general advertising and enable connections.
-            sc = sl_bt_advertiser_start(advertising_set_handle, sl_bt_advertiser_general_discoverable,
-                    sl_bt_advertiser_connectable_scannable);
-            app_assert_status(sc);
-            app_log_info("Started advertising\n\r");
 
             conn_state = scanning;
 
@@ -334,10 +366,17 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
                 // start scanning again to find new devices
                 sc = sl_bt_scanner_start(sl_bt_gap_1m_phy, sl_bt_scanner_discover_generic);
                 app_assert_status_f(sc, "Failed to start discovery #3\n\r");
-                // Start general advertising and enable connections.
-                sc = sl_bt_advertiser_start(advertising_set_handle, sl_bt_advertiser_general_discoverable,
-                        sl_bt_advertiser_connectable_scannable);
+
+                // Generate data for advertising
+                sc = sl_bt_legacy_advertiser_generate_data(advertising_set_handle,
+                                                           sl_bt_advertiser_general_discoverable);
+                app_assert_status(sc);
+
+                // Restart advertising after client has disconnected.
+                sc = sl_bt_legacy_advertiser_start(advertising_set_handle,
+                                                   sl_bt_advertiser_connectable_scannable);
                 app_assert_status_f(sc, "Failed to start advertising\n\r");
+
                 conn_state = scanning;
             }
             break;
@@ -421,10 +460,17 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
                     // start scanning again to find new devices
                     sc = sl_bt_scanner_start(sl_bt_gap_1m_phy, sl_bt_scanner_discover_generic);
                     app_assert_status_f(sc, "Failed to start discovery #2\n\r");
-                    // Start general advertising and enable connections.
-                    sc = sl_bt_advertiser_start(advertising_set_handle, sl_bt_advertiser_general_discoverable,
-                            sl_bt_advertiser_connectable_scannable);
+
+                    // Generate data for advertising
+                    sc = sl_bt_legacy_advertiser_generate_data(advertising_set_handle,
+                                                               sl_bt_advertiser_general_discoverable);
+                    app_assert_status(sc);
+
+                    // Restart advertising after client has disconnected.
+                    sc = sl_bt_legacy_advertiser_start(advertising_set_handle,
+                                                       sl_bt_advertiser_connectable_scannable);
                     app_assert_status_f(sc, "Failed to start advertising\n\r");
+
                     conn_state = scanning;
                 }
                 else
@@ -447,27 +493,21 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
                     char_value = &(evt->data.evt_gatt_characteristic_value.value.data[0]);
                     if(table_index != TABLE_INDEX_INVALID)
                     {
+//                        app_log_info("%d %d %d %d %d Size %d\n\r",
+//                                evt->data.evt_gatt_characteristic_value.value.data[0],
+//                                evt->data.evt_gatt_characteristic_value.value.data[1],
+//                                evt->data.evt_gatt_characteristic_value.value.data[2],
+//                                evt->data.evt_gatt_characteristic_value.value.data[3],
+//                                evt->data.evt_gatt_characteristic_value.value.data[4],
+//                                evt->data.evt_gatt_characteristic_value.value.len);
+
                         conn_properties[table_index].weight = translate_IEEE_11073_temperature_to_float(
                                 (IEEE_11073_float*) (char_value + 1));
                         conn_properties[table_index].weightunit = UNIT_KILOGRAM;
-                        if(table_index == 0)
-                        {
-                            sc = sl_bt_gatt_server_write_attribute_value(
-                                      gattdb_weight_measurement_1,
-                                      0,
-                                      sizeof(char_value),
-                                      char_value);
-                            app_assert_status(sc);
-                        }
-                        if(table_index == 1)
-                        {
-                            sc = sl_bt_gatt_server_write_attribute_value(
-                                      gattdb_weight_measurement_2,
-                                      0,
-                                      sizeof(char_value),
-                                      char_value);
-                            app_assert_status(sc);
-                        }
+                        sc = sl_bt_gatt_server_write_attribute_value(gattdb_weight_measurements[table_index], 0, 5,
+                                char_value);
+
+                        app_assert_status(sc);
                     }
                 }
                 else
