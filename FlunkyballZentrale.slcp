@@ -23,8 +23,8 @@ component:
   id: simple_button
 - {id: bluetooth_feature_gatt_server}
 - {id: bluetooth_feature_sm}
-- {id: mpu}
 - {id: bluetooth_feature_legacy_advertiser}
+- {id: mpu}
 - {id: gatt_configuration}
 - {id: freertos}
 - {id: simple_timer_freertos}
@@ -58,8 +58,8 @@ template_contribution:
   value: {name: hello, handler: hello, help: hello}
 - {name: memory_ram_start, priority: 0, value: 536870912}
 - {name: memory_ram_size, priority: 0, value: 32768}
-- {name: memory_flash_start, priority: 0, value: 32768}
-- {name: memory_flash_size, priority: 0, value: 491520}
+- {name: memory_flash_start, priority: 0, value: 0}
+- {name: memory_flash_size, priority: 0, value: 524288}
 configuration:
 - {name: SL_STACK_SIZE, value: '2752'}
 - {name: SL_HEAP_SIZE, value: '8000'}

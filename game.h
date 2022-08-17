@@ -10,4 +10,10 @@
 
 void game_init(void);
 
+typedef struct
+{
+    uint8_t team;
+    float weight;
+} player_t;
+
 #endif /* GAME_H_ */

@@ -60,6 +60,8 @@ typedef enum
     discover_game_service,
     discover_weight_characteristics,
     discover_team_characteristics,
+    discover_led_service,
+    discover_frequency_characteristics,
     enable_indication,
     running
 } conn_state_t;
@@ -93,6 +95,9 @@ static uint8_t gattdb_weight_measurements[] = {
 
 };
 
+static uint8_t team1_count = 0;
+static uint8_t team2_count = 0;
+
 // State of the connection under establishment
 static conn_state_t conn_state;
 
@@ -116,26 +121,39 @@ static uint8_t find_index_by_connection_handle(uint8_t connection);
 static uint8_t find_service_in_advertisement(uint8_t *data, uint8_t len);
 
 // Service UUID defined by Bluetooth SIG
+//1800
+static const uint8array generic_service = {.len = 2 , .data = {0x00, 0x18}};
 //181D
 static const uint8array weight_service = {.len = 2 , .data = {0x1D, 0x18}};
-static const uint8array generic_service = {.len = 2 , .data = {0x00, 0x18}};
+// Characteristic UUID defined by Bluetooth SIG
+static const uint8array weight_char = {.len = 2 , .data = {0x9D, 0x2a}};
+
+//a0896457-7157-47ad-9103-8822a13bb3d8
+static const uint8array led_service = {.len = 16 , .data = {
+                                                0xd8,0xb3,0x3b,0xa1,
+                                                0x22,0x88,0x03,0x91,
+                                                0xad,0x47,0x57,0x71,
+                                                0x57,0x64,0x89,0xa0}};
+//42dfdd8e-58bc-4560-9e23-000000000002
+static const uint8array frequency_char = {.len = 16 , .data = {
+                                                0x02, 0x00, 0x00, 0x00,
+                                                0x00, 0x00, 0x23, 0x9e,
+                                                0x60, 0x45, 0xbc, 0x58,
+                                                0x8e, 0xdd, 0xdf, 0x42}};
 
 //10f2fce7-1ff8-4bad-8960-092fe5f7ae8f
-static const uint8array game_service = {.len = 16 , .data = {0x8f,0xae,0xf7,0xe5,
+static const uint8array game_service = {.len = 16 , .data = {
+                                                0x8f,0xae,0xf7,0xe5,
                                                 0x2f,0x09,0x60,0x89,
                                                 0xad,0x4b,0xf8,0x1f,
                                                 0xe7,0xfc,0xf2,0x10}};
-// Characteristic UUID defined by Bluetooth SIG
-static const uint8array weight_char = {.len = 2 , .data = {0x9D, 0x2a}};
 // 42dfdd8e-58bc-4560-9e23-000000000003
-static const uint8array team_char = {.len = 16 , .data = {0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                          0x23, 0x9e, 0x60, 0x45, 0xbc, 0x58,
-                                                          0x8e, 0xdd, 0xdf, 0x42}};
-// Print out tx power value
-static bool print_tx_power = PRINT_TX_POWER_DEFAULT;
+static const uint8array team_char = {.len = 16 , .data = {
+                                                0x03, 0x00, 0x00, 0x00,
+                                                0x00, 0x00, 0x23, 0x9e,
+                                                0x60, 0x45, 0xbc, 0x58,
+                                                0x8e, 0xdd, 0xdf, 0x42}};
 
-// Print RSSI and temperature values
-static void print_values(void);
 
 /**************************************************************************//**
  * Bluetooth stack event handler.
@@ -160,34 +178,34 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
         // This event indicates the device has started and the radio is ready.
         // Do not call any stack command before receiving this boot event!
         case sl_bt_evt_system_boot_id:
-          // Print boot message.
-          app_log_info("Bluetooth stack booted: v%d.%d.%d-b%d\n",
+            // Print boot message.
+            app_log_info("Bluetooth stack booted: v%d.%d.%d-b%d\n\r",
                        evt->data.evt_system_boot.major,
                        evt->data.evt_system_boot.minor,
                        evt->data.evt_system_boot.patch,
                        evt->data.evt_system_boot.build);
 
-          // Extract unique ID from BT Address.
-          sc = sl_bt_system_get_identity_address(&address, &address_type);
-          app_assert_status(sc);
+            // Extract unique ID from BT Address.
+            sc = sl_bt_system_get_identity_address(&address, &address_type);
+            app_assert_status(sc);
 
-          // Pad and reverse unique ID to get System ID.
-          system_id[0] = address.addr[5];
-          system_id[1] = address.addr[4];
-          system_id[2] = address.addr[3];
-          system_id[3] = 0xFF;
-          system_id[4] = 0xFE;
-          system_id[5] = address.addr[2];
-          system_id[6] = address.addr[1];
-          system_id[7] = address.addr[0];
+            // Pad and reverse unique ID to get System ID.
+            system_id[0] = address.addr[5];
+            system_id[1] = address.addr[4];
+            system_id[2] = address.addr[3];
+            system_id[3] = 0xFF;
+            system_id[4] = 0xFE;
+            system_id[5] = address.addr[2];
+            system_id[6] = address.addr[1];
+            system_id[7] = address.addr[0];
 
-          sc = sl_bt_gatt_server_write_attribute_value(gattdb_system_id,
+            sc = sl_bt_gatt_server_write_attribute_value(gattdb_system_id,
                                                        0,
                                                        sizeof(system_id),
                                                        system_id);
-          app_assert_status(sc);
+            app_assert_status(sc);
 
-          app_log_info("Bluetooth %s address: %02X:%02X:%02X:%02X:%02X:%02X\n",
+            app_log_info("Bluetooth %s address: %02X:%02X:%02X:%02X:%02X:%02X\n\r",
                        address_type ? "static random" : "public device",
                        address.addr[5],
                        address.addr[4],
@@ -196,32 +214,30 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
                        address.addr[1],
                        address.addr[0]);
 
-          // Create an advertising set.
-          sc = sl_bt_advertiser_create_set(&advertising_set_handle);
-          app_assert_status(sc);
+            // Create an advertising set.
+            sc = sl_bt_advertiser_create_set(&advertising_set_handle);
+            app_assert_status(sc);
 
-          // Generate data for advertising
-          sc = sl_bt_legacy_advertiser_generate_data(advertising_set_handle,
+            // Generate data for advertising
+            sc = sl_bt_legacy_advertiser_generate_data(advertising_set_handle,
                                                      sl_bt_advertiser_general_discoverable);
-          app_assert_status(sc);
+            app_assert_status(sc);
 
-          // Set advertising interval to 100ms.
-          sc = sl_bt_advertiser_set_timing(
+            // Set advertising interval to 100ms.
+            sc = sl_bt_advertiser_set_timing(
             advertising_set_handle, // advertising set handle
             160, // min. adv. interval (milliseconds * 1.6)
             160, // max. adv. interval (milliseconds * 1.6)
             0,   // adv. duration
             0);  // max. num. adv. events
-          app_assert_status(sc);
+            app_assert_status(sc);
 
-          // Start advertising and enable connections.
-          sc = sl_bt_legacy_advertiser_start(advertising_set_handle,
+            // Start advertising and enable connections.
+            sc = sl_bt_legacy_advertiser_start(advertising_set_handle,
                                              sl_bt_advertiser_connectable_scannable);
-          app_assert_status(sc);
+            app_assert_status(sc);
 
-          app_log_info("Started advertising\n");
-
-
+            app_log_info("Started advertising\n\r");
 
             // Set passive scanning on 1Mb PHY
             sc = sl_bt_scanner_set_mode(sl_bt_gap_1m_phy, SCAN_PASSIVE);
@@ -240,9 +256,9 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
             conn_state = scanning;
 
             break;
-            // -------------------------------
-            // This event is generated when an advertisement packet or a scan response
-            // is received from a responder
+        // -------------------------------
+        // This event is generated when an advertisement packet or a scan response
+        // is received from a responder
         case sl_bt_evt_scanner_scan_report_id:
             // Parse advertisement packets
             if(evt->data.evt_scanner_scan_report.packet_type == 0)
@@ -279,8 +295,8 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
             }
             break;
 
-            // -------------------------------
-            // This event is generated when a new connection is established
+        // -------------------------------
+        // This event is generated when a new connection is established
         case sl_bt_evt_connection_opened_id:
             // Get last two bytes of sender address
             addr_value = (uint16_t) (evt->data.evt_connection_opened.address.addr[1] << 8)
@@ -300,8 +316,8 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
             conn_state = discover_weight_service;
             break;
 
-            // -------------------------------
-            // This event is generated when a new service is discovered
+        // -------------------------------
+        // This event is generated when a new service is discovered
         case sl_bt_evt_gatt_service_id:
             table_index = find_index_by_connection_handle(evt->data.evt_gatt_service.connection);
             if(table_index != TABLE_INDEX_INVALID)
@@ -316,6 +332,11 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
                 {
                     app_log_info("Game service\n\r");
                     conn_properties[table_index].game_service_handle = evt->data.evt_gatt_service.service;
+                }
+                else if(compare_uuid(&(evt->data.evt_gatt_service.uuid), &led_service))
+                {
+                    app_log_info("LED service\n\r");
+                    conn_properties[table_index].led_service_handle = evt->data.evt_gatt_service.service;
                 }
                 else if (compare_uuid(&(evt->data.evt_gatt_service.uuid), &generic_service))
                 {
@@ -336,8 +357,8 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
             break;
 
 
-            // -------------------------------
-            // This event is generated when a new characteristic is discovered
+        // -------------------------------
+        // This event is generated when a new characteristic is discovered
         case sl_bt_evt_gatt_characteristic_id:
             table_index = find_index_by_connection_handle(evt->data.evt_gatt_characteristic.connection);
             if(table_index != TABLE_INDEX_INVALID)
@@ -353,11 +374,16 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
                     conn_properties[table_index].team_characteristic_handle =
                         evt->data.evt_gatt_characteristic.characteristic;
                 }
+                else if(compare_uuid(&(evt->data.evt_gatt_characteristic.uuid), &frequency_char))
+                {
+                    conn_properties[table_index].frequency_characteristic_handle =
+                        evt->data.evt_gatt_characteristic.characteristic;
+                }
             }
             break;
 
-            // -------------------------------
-            // This event is generated when a connection is dropped
+        // -------------------------------
+        // This event is generated when a connection is dropped
         case sl_bt_evt_connection_closed_id:
             // remove connection from active connections
             remove_connection(evt->data.evt_connection_closed.connection);
@@ -381,15 +407,14 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
             }
             break;
 
-            // -------------------------------
-            // This event is generated for various procedure completions, e.g. when a
-            // write procedure is completed, or service discovery is completed
+        // -------------------------------
+        // This event is generated for various procedure completions, e.g. when a
+        // write procedure is completed, or service discovery is completed
         case sl_bt_evt_gatt_procedure_completed_id:
             table_index = find_index_by_connection_handle(evt->data.evt_gatt_procedure_completed.connection);
             if(table_index == TABLE_INDEX_INVALID)
             {
                 break;
-
             }
             // If service discovery finished
             if(conn_state == discover_weight_service)
@@ -447,10 +472,41 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
                     sc = sl_bt_gatt_read_characteristic_value(evt->data.evt_gatt_procedure_completed.connection
                             ,conn_properties[table_index].team_characteristic_handle);
                     app_assert_status(sc);
+
+                    conn_state = discover_led_service;
+                    break;
+                }
+            }
+
+            if(conn_state == discover_led_service)
+            {
+                if(conn_properties[table_index].led_service_handle != SERVICE_HANDLE_INVALID)
+                {
+                    // Discover weight characteristic on the responder device
+                    sc = sl_bt_gatt_discover_characteristics_by_uuid(evt->data.evt_gatt_procedure_completed.connection,
+                            conn_properties[table_index].led_service_handle,
+                            frequency_char.len,
+                            (const uint8_t*) frequency_char.data);
+                    app_assert_status(sc);
+                    conn_state = discover_frequency_characteristics;
+                    break;
+                }
+            }
+
+            if(conn_state == discover_frequency_characteristics)
+            {
+                // If team characteristic discovery finished
+                if(conn_properties[table_index].frequency_characteristic_handle!= CHARACTERISTIC_HANDLE_INVALID)
+                {
+                    sc = sl_bt_gatt_read_characteristic_value(evt->data.evt_gatt_procedure_completed.connection
+                            ,conn_properties[table_index].frequency_characteristic_handle);
+                    app_assert_status(sc);
+
                     conn_state = enable_indication;
                     break;
                 }
             }
+
             // If indication enable process finished
             if(conn_state == enable_indication)
             {
@@ -479,10 +535,15 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
                 }
                 break;
             }
+            if((conn_state == scanning)||(conn_state == running))
+            {
+                app_log_append("Result %d", evt->data.evt_gatt_procedure_completed.result);
+            }
+
             break;
 
-            // -------------------------------
-            // This event is generated when a characteristic value was received e.g. an indication
+        // -------------------------------
+        // This event is generated when a characteristic value was received e.g. an indication
         case sl_bt_evt_gatt_characteristic_value_id:
             table_index = find_index_by_connection_handle(evt->data.evt_gatt_characteristic_value.connection);
             if(evt->data.evt_gatt_characteristic_value.characteristic ==
@@ -503,7 +564,6 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
 
                         conn_properties[table_index].weight = translate_IEEE_11073_temperature_to_float(
                                 (IEEE_11073_float*) (char_value + 1));
-                        conn_properties[table_index].weightunit = UNIT_KILOGRAM;
                         sc = sl_bt_gatt_server_write_attribute_value(gattdb_weight_measurements[table_index], 0, 5,
                                 char_value);
 
@@ -531,8 +591,14 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
             app_assert_status(sc);
 
             break;
-            // -------------------------------
-            // This event is generated when RSSI value was measured
+//        case sl_bt_evt_gatt_server_characteristic_status_id:
+//            table_index = find_index_by_connection_handle(evt->data.evt_gatt_server_characteristic_status.connection);
+//            app_log_append("CharStatus: %d",evt->data.evt_gatt_server_characteristic_status.status_flags);
+//            break;
+
+
+        // -------------------------------
+        // This event is generated when RSSI value was measured
         case sl_bt_evt_connection_rssi_id:
             table_index = find_index_by_connection_handle(evt->data.evt_connection_rssi.connection);
             if(table_index != TABLE_INDEX_INVALID)
@@ -671,6 +737,8 @@ static void remove_connection(uint8_t connection)
         conn_properties[i].weight_characteristic_handle = CHARACTERISTIC_HANDLE_INVALID;
         conn_properties[i].game_service_handle= SERVICE_HANDLE_INVALID;
         conn_properties[i].team_characteristic_handle = CHARACTERISTIC_HANDLE_INVALID;
+        conn_properties[i].led_service_handle= SERVICE_HANDLE_INVALID;
+        conn_properties[i].frequency_characteristic_handle = CHARACTERISTIC_HANDLE_INVALID;
         conn_properties[i].weight = TEMP_INVALID;
         conn_properties[i].rssi = RSSI_INVALID;
         conn_properties[i].power_control_active = TX_POWER_CONTROL_INACTIVE;
@@ -718,7 +786,7 @@ static float translate_IEEE_11073_temperature_to_float(IEEE_11073_float const *I
     mantissa <<= 8;
     mantissa >>= 8;
 
-    return ((float) mantissa) * pow(10.0f, (float) exponent);
+    return ((float) mantissa) * pow(10.0f, (float) exponent)/2;
 }
 
 
@@ -748,69 +816,6 @@ void sl_button_on_change(const sl_button_t *handle)
 }
 
 
-// Print parameters to STDOUT. CR used to display results.
-void print_values(void)
-{
-    static bool print_header = true;
-    static bool previous_print_tx_power = PRINT_TX_POWER_DEFAULT;
-    uint8_t i;
-
-    // If TX power print request changes - header should be updated.
-    if(previous_print_tx_power != print_tx_power)
-    {
-        previous_print_tx_power = print_tx_power;
-        print_header = true;
-    }
-
-    // Print header
-    if(true == print_header)
-    {
-        app_log_info("");
-        for(i = 0u; i < SL_BT_CONFIG_MAX_CONNECTIONS; i++)
-        {
-            if(false == print_tx_power)
-            {
-                app_log_append("ADDR   WEIGHT  RSSI |");
-            }
-            else
-            {
-                app_log_append("ADDR   WEIGHT  RSSI    TXPW |");
-            }
-        }
-        app_log_append("\n\r");
-
-        print_header = false;
-    }
-
-    app_log_info("");
-    // Print parameters
-    for(i = 0u; i < SL_BT_CONFIG_MAX_CONNECTIONS; i++)
-    {
-        if((TEMP_INVALID != conn_properties[i].weight) && (RSSI_INVALID != conn_properties[i].rssi))
-        {
-            app_log_append("%04x ", conn_properties[i].server_address);
-            app_log_append("%6.3fkg ", conn_properties[i].weight);
-            app_log_append("% 3d", conn_properties[i].rssi);
-            app_log_append("dBm");
-            if(true == print_tx_power)
-            {
-                app_log_append(" %4d", conn_properties[i].tx_power);
-                app_log_append("dBm");
-            }
-            app_log_append("|");
-        }
-        else if(false == print_tx_power)
-        {
-            app_log_append("---- ------- ------|");
-        }
-        else
-        {
-            app_log_append("---- ------ ------  ------|");
-        }
-    }
-    app_log_append("\r");
-}
-
 bool compare_uuid(uint8array *firstuuid, const uint8array *seconduuid)
 {
     if(firstuuid->len == seconduuid->len)
@@ -826,38 +831,86 @@ bool compare_uuid(uint8array *firstuuid, const uint8array *seconduuid)
 void team_counter(uint8_t team, bool add)
 {
     uint8_t attribute = 0;
-    uint8_t team_count = 0;
-    size_t readlen = 0;
     sl_status_t sc;
     if(team != TEAM_INVALID)
     {
-        if(team == 0)
+        if(team == 1)
         {
             attribute = gattdb_team1_count;
+            if(add)
+            {
+                team1_count++;
+            }
+            else
+            {
+                team1_count--;
+            }
+            sc = sl_bt_gatt_server_write_attribute_value(attribute, 0, sizeof(team1_count), &team1_count);
+            app_assert_status(sc);
         }
-        else
+        else if(team == 2)
         {
             attribute = gattdb_team2_count;
-        }
-
-        sc = sl_bt_gatt_server_read_attribute_value(attribute, 0, sizeof(team_count), &readlen, &team_count);
-        app_assert_status(sc);
-        if(add)
-        {
-            team_count++;
+            if(add)
+            {
+                team2_count++;
+            }
+            else
+            {
+                team2_count--;
+            }
+            sc = sl_bt_gatt_server_write_attribute_value(attribute, 0, sizeof(team2_count), &team2_count);
+            app_assert_status(sc);
         }
         else
         {
-            team_count--;
+            return;
         }
-        sc = sl_bt_gatt_server_write_attribute_value(attribute, 0, sizeof(team_count), &team_count);
-        app_assert_status(sc);
     }
 }
 
-void get_player_data(conn_properties_t* conn_properties_ext, uint8_t player)
+void get_player_data(player_t *player_data, uint8_t player)
 {
-  conn_properties_ext->weight = conn_properties[player].weight;
+    player_data->weight = conn_properties[player].weight;
+    player_data->team = conn_properties[player].team;
+}
+
+uint8_t get_team_count(uint8_t team)
+{
+    if(team==1)
+    {
+        return team1_count;
+    }
+    else if(team == 2)
+    {
+        return team2_count;
+    }
+    return 0;
+}
+
+void send_led_frequency(uint8_t freq, uint8_t player)
+{
+    sl_status_t status;
+    for(uint8_t var = 0; var < 100; var++)
+    {
+        if(sl_bt_event_pending())
+        {
+            vTaskDelay(pdMS_TO_TICKS(1));
+        }
+        else
+        {
+            status = sl_bt_gatt_write_characteristic_value(
+                              conn_properties[player].connection_handle,
+                              conn_properties[player].frequency_characteristic_handle,
+                              1,
+                              &freq);
+            var = 100;
+        }
+    }
+
+
+
+    app_log_status_error(status);
 }
 
 bool getbuttonstate(void)
@@ -865,17 +918,12 @@ bool getbuttonstate(void)
     return app_btn0_pressed;
 }
 
-
-#ifdef SL_CATALOG_CLI_PRESENT
-void hello(sl_cli_command_arg_t *arguments)
+void HardFault_Handler(void)
 {
-    (void) arguments;
-    bd_addr address;
-    uint8_t address_type;
-    sl_status_t sc = sl_bt_system_get_identity_address(&address, &address_type);
-    app_assert_status(sc);
-    app_log_info("Bluetooth %s address: %02X:%02X:%02X:%02X:%02X:%02X\n\r",
-            address_type ? "static random" : "public device", address.addr[5], address.addr[4], address.addr[3],
-            address.addr[2], address.addr[1], address.addr[0]);
+    while(true){}
 }
-#endif // SL_CATALOG_CLI_PRESENT
+
+void vApplicationMallocFailedHook(void)
+{
+    while(true){}
+}

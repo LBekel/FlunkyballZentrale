@@ -32,6 +32,8 @@
 #define APP_H
 
 #include "em_common.h"
+#include "game.h"
+
 typedef struct
 {
     uint8_t connection_handle;
@@ -44,9 +46,10 @@ typedef struct
     uint16_t weight_characteristic_handle;
     uint32_t game_service_handle;
     uint16_t team_characteristic_handle;
+    uint32_t led_service_handle;
+    uint16_t frequency_characteristic_handle;
     uint8_t team;
     float weight;
-    char weightunit;
 } conn_properties_t;
 
 /**************************************************************************//**
@@ -58,7 +61,9 @@ void app_init(void);
  * Application Process Action.
  *****************************************************************************/
 void app_process_action(void);
-void get_player_data(conn_properties_t *conn_properties_ext, uint8_t player);
+void get_player_data(player_t *player_data, uint8_t player);
 bool getbuttonstate(void);
+uint8_t get_team_count(uint8_t team);
+void send_led_frequency(uint8_t freq, uint8_t player);
 
 #endif // APP_H

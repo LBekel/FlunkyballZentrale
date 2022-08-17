@@ -1,5 +1,7 @@
 #CRC Codes for initially generated config files -- do not modify!
 FreeRTOSConfig.h=-999529991
+SEGGER_RTT_Conf.h=1088810083
+SEGGER_SYSVIEW_Conf.h=-893057111
 app_assert_config.h=1351236558
 app_log_config.h=-1134478857
 app_properties_config.h=-763091270

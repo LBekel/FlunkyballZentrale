@@ -69,7 +69,7 @@
 //  <o>Total heap size [bytes] <0-0xFFFFFFFF>
 //  <i> Heap memory size in bytes.
 //  <i> Default: 8192
-#define configTOTAL_HEAP_SIZE                   1024
+#define configTOTAL_HEAP_SIZE                   512
 
 //  <o>Kernel tick frequency [Hz] <0-0xFFFFFFFF>
 //  <i> Kernel tick rate in Hz.
@@ -135,7 +135,7 @@
 //  <i> Enable callback function call when out of dynamic memory.
 //  <i> Callback function vApplicationMallocFailedHook implementation is required when malloc failed hook is enabled.
 //  <i> Default: 0
-#define configUSE_MALLOC_FAILED_HOOK            0
+#define configUSE_MALLOC_FAILED_HOOK            1
 
 //  <o>Queue registry size
 //  <i> Define maximum number of queue objects registered for debug purposes.
